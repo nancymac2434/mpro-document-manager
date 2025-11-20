@@ -3,33 +3,6 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-// Secure File Upload Function
-function wpd_secure_file_upload($file) {
-	$allowed_mime_types = [
-		'image/jpeg' => 'jpg',
-		'image/png'  => 'png',
-		'image/gif'  => 'gif',
-		'application/pdf' => 'pdf',
-		'application/msword' => 'doc',
-		'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
-		'application/vnd.ms-powerpoint' => 'ppt',
-		'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
-		'application/vnd.ms-excel' => 'xls',
-		'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx'
-	];
-
-	$file_type = wp_check_filetype($file['name']);
-	if (!array_key_exists($file_type['type'], $allowed_mime_types)) {
-		return ['error' => "Invalid file type."];
-	}
-
-	if ($file['size'] > 5 * 1024 * 1024) { // 5MB limit
-		return ['error' => "File size exceeds 5MB."];
-	}
-
-	return wp_handle_upload($file, ['test_form' => false]);
-}
-
 // Handle Upload
 function wpd_handle_document_upload() {
 		
@@ -42,19 +15,19 @@ function wpd_handle_document_upload() {
 		// Verify Nonce Security Check
 		if (!isset($_POST['wpd_document_nonce']) || !wp_verify_nonce($_POST['wpd_document_nonce'], 'wpd_document_upload')) {
 			$_SESSION['wpd_upload_error'] = "Security check failed.";
-			wp_redirect($_SERVER['REQUEST_URI']);
+			wp_safe_redirect($_SERVER['REQUEST_URI']);
 			exit;
 		}
 
 		if (!is_user_logged_in()) {
 			$_SESSION['wpd_upload_error'] = "You must be logged in to upload documents.";
-			wp_redirect($_SERVER['REQUEST_URI']);
+			wp_safe_redirect($_SERVER['REQUEST_URI']);
 			exit;
 		}
 
 		if (!isset($_FILES['document_file']) || $_FILES['document_file']['error'] !== 0) {
 			$_SESSION['wpd_upload_error'] = "No file uploaded or file upload failed.";
-			wp_redirect($_SERVER['REQUEST_URI']);
+			wp_safe_redirect($_SERVER['REQUEST_URI']);
 			exit;
 		}
 		
@@ -68,7 +41,7 @@ function wpd_handle_document_upload() {
 		// Validate file type
 		if (!in_array($file_extension, $allowed_extensions)) {
 			$_SESSION['wpd_upload_error'] = "Invalid file type. Allowed types: " . implode(", ", $allowed_extensions);
-			wp_redirect($_SERVER['REQUEST_URI']);
+			wp_safe_redirect($_SERVER['REQUEST_URI']);
 			exit;
 		}
 				
@@ -79,7 +52,7 @@ function wpd_handle_document_upload() {
 			empty($_POST['document_user_contract']) && empty($_POST['share_with_all_pms'])
 		) {
 			$_SESSION['wpd_upload_error'] = "You must select at least one mentee, mentor, or program manager to share the document with.";
-			wp_redirect($_SERVER['REQUEST_URI']);
+			wp_safe_redirect($_SERVER['REQUEST_URI']);
 			exit;
 		}
 		
@@ -94,7 +67,10 @@ function wpd_handle_document_upload() {
 		}
 
 		// Ensure unique filename
-		$new_file_name = sanitize_file_name($file_name);
+		$file_info = pathinfo($file_name);
+		$base_name = sanitize_file_name($file_info['filename']);
+		$extension = isset($file_info['extension']) ? '.' . $file_info['extension'] : '';
+		$new_file_name = $base_name . '-' . uniqid() . $extension;
 		$file_path = $custom_dir . $new_file_name;
 		$file_url = $upload_dir['baseurl'] . '/mpro-document-manager/' . $new_file_name;
 
@@ -159,34 +135,15 @@ function wpd_handle_document_upload() {
 			$user          = wp_get_current_user();
 			$user_roles    = (array) $user->roles;
 			$actor_role    = function_exists('get_highest_priority_role') ? get_highest_priority_role($user_roles) : ($user_roles[0] ?? '');
-			
+
 			$shared_all_mentors  = !empty($_POST['share_with_all_mentors']);
 			$shared_some_mentors = !empty($_POST['document_user_mentor']) && is_array($_POST['document_user_mentor']);
-			
+
 			if ($actor_role === 'mentee' && ($shared_all_mentors || $shared_some_mentors)) {
+				// Ensure 'contract' is present (means: All PMs)
 				if (!in_array('contract', $existing_roles, true)) {
 					$existing_roles[] = 'contract';
 				}
-			}
-
-			if ($actor_role === 'mentee' && ($shared_all_mentors || $shared_some_mentors)) {
-				// Read existing role visibility
-				$roles = get_post_meta($post_id, 'document_roles', true);
-				if (!is_array($roles)) {
-					$roles = [];
-				}
-			
-				// Ensure 'contract' is present (means: All PMs)
-				if (!in_array('contract', $roles, true)) {
-					$roles[] = 'contract';
-				}
-			
-				// Save unique, normalized roles
-				$roles = array_values(array_unique(array_map('strval', $roles)));
-				update_post_meta($post_id, 'document_roles', $roles);
-			
-				// Optional: remove any per-PM targeting to avoid confusion (not required)
-				// delete_post_meta($post_id, 'document_user_contract');
 			}
 
 			
@@ -213,13 +170,17 @@ function wpd_handle_document_upload() {
 
 			//  Ensure document_roles is updated only once
 			update_post_meta($post_id, 'document_roles', array_unique($existing_roles));
+
+			// Clear document list caches for this client
+			mpro_clear_document_caches($assigned_client);
+
 			$_SESSION['wpd_upload_success'] = "Document uploaded successfully!";
 		} else {
 			$_SESSION['wpd_upload_error'] = "File upload failed. Please try again.";
 		}
 		
 		//  Redirect to prevent re-submission on refresh
-		wp_redirect($_SERVER['REQUEST_URI']);
+		wp_safe_redirect($_SERVER['REQUEST_URI']);
 		exit;
 	}
 }

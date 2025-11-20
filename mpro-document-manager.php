@@ -21,6 +21,7 @@ if ( ! defined('MPRO_DM_MIN_WP') )      define('MPRO_DM_MIN_WP', '6.0');
 if ( ! defined('MPRO_DM_FILE') )        define('MPRO_DM_FILE', __FILE__);
 if ( ! defined('MPRO_DM_PATH') )        define('MPRO_DM_PATH', plugin_dir_path(__FILE__));
 if ( ! defined('MPRO_DM_URL') )         define('MPRO_DM_URL', plugin_dir_url(__FILE__));
+if ( ! defined('MPRO_DM_MAX_FILE_SIZE') ) define('MPRO_DM_MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB in bytes
 
 // -----------------------------------------------------------------------------
 // Bootstrap / Safety checks
@@ -149,7 +150,6 @@ function mpro_dm_enqueue_frontend_assets() {
 	wp_enqueue_script( 'mpro-select2' );
 	wp_enqueue_script( 'mpro-sweetalert2' );
 	wp_enqueue_script( 'mpro-custom-scripts' );
-	 wp_add_inline_script('mpro-custom-scripts', 'console.log("[mpro] scripts.js loaded");');
 
 	// Compute dynamic UI data for JS.
 	$current_user = wp_get_current_user();
@@ -161,6 +161,7 @@ function mpro_dm_enqueue_frontend_assets() {
 		'version'   => MPRO_DM_VERSION,
 		'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
 		'nonce'     => wp_create_nonce( 'mpro_dm_nonce' ),
+		'maxFileSize' => MPRO_DM_MAX_FILE_SIZE,
 		'user'      => array(
 			'id'    => get_current_user_id(),
 			'role'  => $role,

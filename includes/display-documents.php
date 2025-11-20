@@ -11,9 +11,7 @@ if (!defined('ABSPATH')) { exit; }
 function mpro_render_document_tabs() {
    $current_user = wp_get_current_user();
    $user_roles   = (array) $current_user->roles;
-   $is_pm        = in_array('contract', $user_roles, true)
-				|| in_array('program_manager', $user_roles, true)
-				|| in_array('pm', $user_roles, true);
+   $is_pm        = mpro_is_pm($user_roles);
  
    $uploaded_args = mpro_build_query_args('you_have_shared');
    $shared_args   = mpro_build_query_args($is_pm ? 'all_documents' : 'shared_with_you'); // <-- changed
@@ -38,19 +36,36 @@ function mpro_render_document_tabs() {
 	 </ul>
  
 	 <div id="tab-uploaded" class="mpro-tab-content active" role="tabpanel">
+	   <div class="mpro-tab-tools">
+		 <input type="text"
+				id="search-uploaded"
+				class="mpro-tab-search"
+				placeholder="<?php echo esc_attr__('Search documents...', 'mpro-document-manager'); ?>">
+	   </div>
 	   <?php display_document_list($uploaded_args, 'you_have_shared', 'uploaded-table'); ?>
 	 </div>
  
 	 <div id="tab-shared" class="mpro-tab-content" role="tabpanel">
+	   <p><?php echo esc_html__('View all documents shared in the program.', 'mpro-document-manager'); ?></p>
+	   <div class="mpro-tab-tools">
+		 <input type="text"
+				id="search-shared"
+				class="mpro-tab-search"
+				placeholder="<?php echo esc_attr__('Search documents...', 'mpro-document-manager'); ?>">
+	   </div>
 	   <?php
-		 // Pass the table key so columns/labels adapt
-		 echo 'View all documents shared in the program.'; 
 		 display_document_list($shared_args, $is_pm ? 'all_documents' : 'shared_with_you', 'shared-table'); // <-- changed
 	   ?>
 	 </div>
  
 	 <?php if ($is_pm): ?>
 	   <div id="tab-shared-direct" class="mpro-tab-content" role="tabpanel">
+		 <div class="mpro-tab-tools">
+		   <input type="text"
+				  id="search-shared-direct"
+				  class="mpro-tab-search"
+				  placeholder="<?php echo esc_attr__('Search documents...', 'mpro-document-manager'); ?>">
+		 </div>
 		 <?php display_document_list($direct_args, 'shared_direct_with_you', 'shared-direct-table'); ?>
 	   </div>
 	 <?php endif; ?>
@@ -212,10 +227,8 @@ function display_document_list($query_args, $share_table, $table_id) {
 
 	$user_roles = wp_get_current_user()->roles;
 	$user_role  = function_exists('get_highest_priority_role') ? get_highest_priority_role($user_roles) : ( $user_roles[0] ?? 'subscriber' );
-	
-	$is_pm = in_array('contract', $user_roles, true)
-		  || in_array('pm', $user_roles, true)
-		  || in_array('program_manager', $user_roles, true);
+
+	$is_pm = mpro_is_pm($user_roles);
 	
 	// Only hide the *role-wide* PM label on "Uploaded by You" when viewer is not a PM
 	$hide_pm_role_label = ($share_table === 'you_have_shared') && !$is_pm;
@@ -349,10 +362,10 @@ function display_document_list($query_args, $share_table, $table_id) {
 						<td>
 							<?php if ($is_owner_or_admin || ($user_role === 'contract')): ?>
 								<?php $nonce_field = wp_nonce_field('wpd_delete_document', 'wpd_delete_nonce', true, false); ?>
-								<form action="/mentorpro-document-upload/" method="post" enctype="multipart/form-data">
+								<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post" enctype="multipart/form-data">
 									<?php echo str_replace('id="wpd_delete_nonce"', '', $nonce_field); // remove id to avoid duplicates ?>
 									<input type="hidden" name="delete_document_id" value="<?php echo esc_attr($doc->ID); ?>">
-									<input type="hidden" name="_wp_http_referer" value="/mentorpro-document-upload/">
+									<input type="hidden" name="_wp_http_referer" value="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>">
 									<button type="submit" name="delete_document" class="delete-note-button" style="color:red; border:none; background:none; cursor:pointer;"><?php echo esc_html__('Delete', 'mpro-document-manager'); ?></button>
 								</form>
 							<?php endif; ?>

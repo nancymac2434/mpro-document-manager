@@ -103,7 +103,7 @@ jQuery(function($){
   var $input  = $('#document_file');
   var $prev   = $('#mpro-preview');
 
-  var MAX_BYTES = 5 * 1024 * 1024;
+  var MAX_BYTES = (typeof mproDM !== 'undefined' && mproDM.maxFileSize) ? mproDM.maxFileSize : 5 * 1024 * 1024;
   var allowedExt = ['jpg','jpeg','gif','png','doc','docx','pdf','ppt','pptx','xls','xlsx'];
 
   function extOf(name){
