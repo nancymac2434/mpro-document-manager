@@ -1,0 +1,124 @@
+/* Container */
+.mpro-doc-tabs { margin-top: 1.25rem; }
+
+/* Tab list fills width, light grey background */
+.mpro-tab-nav {
+  display: flex;
+  gap: 0;                   /* no gaps so tabs touch */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: #f3f4f6;      /* light grey bar */
+  border: 1px solid #e5e7eb;
+  border-bottom: none;      /* content panel will provide the bottom border */
+  border-radius: .5rem .5rem 0 0;
+  overflow: hidden;         /* clip active tab rounding */
+}
+
+/* Each tab takes equal width */
+.mpro-tab-nav li {
+  flex: 1 1 0%;
+  text-align: center;
+  padding: .75rem 1rem;
+  cursor: pointer;
+  color: #334155;           /* slate-700-ish */
+  background: #f3f4f6;
+  border-right: 1px solid #e5e7eb;
+  user-select: none;
+  transition: background .15s ease, color .15s ease;
+}
+.mpro-tab-nav li:last-child { border-right: none; }
+
+/* Hover/focus state for inactive tabs */
+.mpro-tab-nav li:hover,
+.mpro-tab-nav li:focus {
+  background: #e8edf0;
+  outline: none;
+}
+
+/* Active tab: white, bold, visually connected to content below */
+.mpro-tab-nav li.active {
+  background: #fff;
+  color: #111827;
+  font-weight: 600;
+  border-bottom: none;
+  box-shadow: inset 0 -2px 0 #fff; /* hide top border of content panel seam */
+}
+
+/* Content panel (white) connected to active tab */
+.mpro-tab-content {
+  display: none;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-top: none;                 /* attaches to the tab bar */
+  border-radius: 0 0 .5rem .5rem;
+}
+.mpro-tab-content.active { display: block; }
+
+/* Small screens: keep equal-width tabs; allow horizontal scroll if needed */
+@media (max-width: 600px) {
+  .mpro-tab-nav { overflow-x: auto; }
+  .mpro-tab-nav li { min-width: 160px; flex: 1 0 auto; }
+}
+
+.mpro-doc-grey-box {padding: 30px;}
+.mpro-doc-white-box {
+  background-color: #ffffff; /* White background */
+  border: 1px solid #cccccc; /* Light grey border (1px solid) */
+  border-radius: 10px; /* Rounded corners with a 10px radius */
+  padding: 20px; /* Optional: Add some padding inside the box */
+  margin-bottom: 20px; /* Adds 20px of spacing below the box */
+
+}
+.mpro-doc-title {margin-top: 30px; font-size: 20px; font-weight: 800;}
+.mpro-selectbox-block {margin-top: 20px;}
+
+.mpro-dropzone {
+  border: 2px dashed #B6C4CA;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: border-color .15s, background .15s;
+  cursor: pointer;
+}
+.mpro-dropzone.mpro-dragover {
+  border-color: #2B4D59;
+  background: #F0F6F8;
+}
+.mpro-drop-inner {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+}
+.mpro-drop-inner svg { stroke: #7A9199; fill:none; stroke-width:1.5; }
+.mpro-link {
+  background:none; border:none; color:#2B4D59; text-decoration:underline; cursor:pointer; padding:0;
+}
+.mpro-preview { margin-top: 10px; font-size: 14px; color:#2B4D59; }
+.mpro-file-chip {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 10px; border-radius:999px; background:#E6F2F5;
+}
+.mpro-file-chip img { width:20px; height:20px; border-radius:4px; object-fit:cover; }
+
+.mpro-tab-tools {
+  display:flex;
+  justify-content:flex-end;
+  padding: .5rem 0 1rem;
+}
+.mpro-tab-search {
+  max-width: 360px;
+  width: 100%;
+  padding: .5rem .75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: .5rem;
+  background: #fff;
+  font-size: 14px;
+}
+.mpro-tab-search:focus {
+  outline: none;
+  border-color: #2B4D59;
+  box-shadow: 0 0 0 3px rgba(43,77,89,.12);
+}
