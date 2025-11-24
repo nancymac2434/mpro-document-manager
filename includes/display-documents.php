@@ -46,7 +46,9 @@ function mpro_render_document_tabs() {
 	 </div>
  
 	 <div id="tab-shared" class="mpro-tab-content" role="tabpanel">
-	   <p><?php echo esc_html__('View all documents shared in the program.', 'mpro-document-manager'); ?></p>
+	   <?php if ($is_pm): ?>
+		 <p><?php echo esc_html__('View all documents shared in the program.', 'mpro-document-manager'); ?></p>
+	   <?php endif; ?>
 	   <div class="mpro-tab-tools">
 		 <input type="text"
 				id="search-shared"
